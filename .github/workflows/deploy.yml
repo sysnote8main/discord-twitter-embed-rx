@@ -11,31 +11,27 @@ jobs:
     # push-imageワークフローが成功した場合のみ実行
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Setup SSH
+      - name: Trigger Deploy Webhook
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
         run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          PAYLOAD='{"event":"deploy"}'
+          SIGNATURE=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" | awk '{print $2}')
 
-      - name: Deploy Application
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-        run: |
-          ssh -i ~/.ssh/deploy_key "$SSH_USER@$VPS_HOST" -p "$SSH_PORT" \
-          "cd TwitterRX && docker compose pull && docker compose up -d --force-recreate --remove-orphans"
+          HTTP_STATUS=$(curl -s -o /tmp/webhook_response.txt -w "%{http_code}" \
+            -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+            -d "$PAYLOAD" \
+            --max-time 15)
 
-      - name: Verify Deployment
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-        run: |
-          sleep 10
-          ssh -i ~/.ssh/deploy_key "$SSH_USER@$VPS_HOST" -p "$SSH_PORT" \
-          "cd TwitterRX && docker compose ps"
+          echo "Response: $(cat /tmp/webhook_response.txt)"
+          echo "HTTP Status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::error::Webhook returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
+
+          echo "Deploy webhook triggered successfully"
