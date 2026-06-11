@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/twitterrx/discord-twitter-embed-rx/compare/v2.2.0...v2.3.0) (2026-06-11)
+
+
+### Features
+
+* ユーザーBAN・サーバーBAN・脱退機能を追加 ([#473](https://github.com/twitterrx/discord-twitter-embed-rx/issues/473)) ([50ad1a3](https://github.com/twitterrx/discord-twitter-embed-rx/commit/50ad1a3b2a8ca256c481c8b5f3549e2e17830db6))
+
 ## [2.2.0](https://github.com/twitterrx/discord-twitter-embed-rx/compare/v2.1.0...v2.2.0) (2026-05-09)
 
 
