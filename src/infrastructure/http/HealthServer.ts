@@ -64,10 +64,7 @@ export class HealthServer {
       const discord = deps.isDiscordReady();
       const ready = redis && discord;
 
-      return c.json(
-        { status: ready ? "ok" : "not ready", checks: { redis, discord } },
-        ready ? 200 : 503,
-      );
+      return c.json({ status: ready ? "ok" : "not ready", checks: { redis, discord } }, ready ? 200 : 503);
     });
 
     // GET /health — Full Health
@@ -124,7 +121,7 @@ export class HealthServer {
         (info) => {
           logger.info(`[HealthServer] Listening on 0.0.0.0:${info.port}`);
           resolve();
-        },
+        }
       );
     });
   }
