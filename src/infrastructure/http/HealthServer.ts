@@ -1,6 +1,5 @@
-import http from "node:http";
-
 import { serve } from "@hono/node-server";
+import type { ServerType } from "@hono/node-server";
 import { Hono } from "hono";
 
 import logger from "@/utils/logger";
@@ -38,7 +37,7 @@ export interface HealthCheckResult {
  */
 export class HealthServer {
   readonly honoApp: Hono;
-  private server: http.Server | undefined;
+  private server: ServerType | undefined;
   private port: number;
 
   constructor(deps: HealthCheckDependencies, port?: number, appVersion?: string) {
