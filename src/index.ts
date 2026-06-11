@@ -6,10 +6,13 @@ import { Client, GatewayIntentBits, Message, Partials, ChannelType } from "disco
 
 import { DiscordEmbedBuilder } from "@/adapters/discord/EmbedBuilder";
 import { MessageHandler } from "@/adapters/discord/MessageHandler";
+import { OwnerCommandHandler } from "@/adapters/discord/OwnerCommandHandler";
 import { TwitterAdapter } from "@/adapters/twitter/TwitterAdapter";
+import { BanService } from "@/core/services/BanService";
 import { ChannelConfigService } from "@/core/services/ChannelConfigService";
 import { MediaHandler } from "@/core/services/MediaHandler";
 import { TweetProcessor } from "@/core/services/TweetProcessor";
+import { RedisBanRepository } from "@/infrastructure/db/RedisBanRepository";
 import { RedisChannelConfigRepository } from "@/infrastructure/db/RedisChannelConfigRepository";
 import { RedisReplyLogger } from "@/infrastructure/db/RedisReplyLogger";
 import { FileManager } from "@/infrastructure/filesystem/FileManager";
@@ -69,6 +72,13 @@ if (token === undefined) {
   logger.info("Successfully loaded discord bot token");
 }
 
+// === Check owner user id ===
+const ownerUserId = process.env.OWNER_USER_ID;
+if (!ownerUserId) {
+  throw new Error("OWNER_USER_ID environment variable is not set");
+}
+logger.info(`Owner user ID: ${ownerUserId}`);
+
 // === Dependency Injection Setup ===
 const tmpDir = path.join(path.dirname(ROOT_DIR), "tmp");
 
@@ -89,6 +99,10 @@ const mediaHandler = new MediaHandler(httpClient, config.MEDIA_MAX_FILE_SIZE);
 // Adapter層
 const twitterAdapter = TwitterAdapter.createDefault();
 const embedBuilder = new DiscordEmbedBuilder();
+// Owner Command / Ban System
+const banRepository = new RedisBanRepository();
+const banService = new BanService(banRepository);
+
 const messageHandler = new MessageHandler(
   tweetProcessor,
   twitterAdapter,
@@ -98,7 +112,8 @@ const messageHandler = new MessageHandler(
   videoDownloader,
   replyLogger,
   tmpDir,
-  channelConfigService
+  channelConfigService,
+  banService
 );
 
 // === Create discord bot client ===
@@ -112,6 +127,9 @@ const client = new Client({
   ],
   partials: [Partials.Message, Partials.Channel],
 });
+
+// Owner Command Handler
+const ownerCommandHandler = new OwnerCommandHandler(ownerUserId, banService, client);
 
 // === Event handlers ===
 // On ready
@@ -130,6 +148,17 @@ client.on("clientReady", async () => {
 
   // P0: guildCreate - joined フラグとチャンネルキャッシュを設定
   for (const [guildId, guild] of client.guilds.cache) {
+    // P0: BAN チェック — BAN されていたら即座に脱退
+    if (await banService.isGuildBanned(guildId)) {
+      logger.warn(`[Bot] Found banned guild ${guildId} (${guild.name}) during startup, leaving immediately`);
+      try {
+        await guild.leave();
+      } catch (leaveErr) {
+        logger.error(`[Bot] Failed to leave banned guild ${guildId} during startup:`, leaveErr);
+      }
+      continue;
+    }
+
     try {
       const redis = (await import("@/db/init")).redis;
 
@@ -201,7 +230,11 @@ client.on("clientReady", async () => {
 });
 
 // On Message Create
-client.on("messageCreate", (m: Message) => {
+client.on("messageCreate", async (m: Message) => {
+  // Owner DM コマンドのルーティング
+  const isOwnerCommand = await ownerCommandHandler.handleMessage(m);
+  if (isOwnerCommand) return; // Owner コマンドはここで完了
+
   messageHandler.handleMessage(client, m).catch((error) => {
     logger.error("Error handling message:", { error: error.message, stack: error.stack });
   });
@@ -237,6 +270,17 @@ client.on("messageDelete", async (m) => {
 
 // P0: guildCreate - Bot が新しいサーバーに参加した時
 client.on("guildCreate", async (guild) => {
+  // P0: BAN チェック — BAN されていたら即座に脱退
+  if (await banService.isGuildBanned(guild.id)) {
+    logger.warn(`[Bot] Attempted to join banned guild ${guild.id} (${guild.name}), leaving immediately`);
+    try {
+      await guild.leave();
+    } catch (leaveErr) {
+      logger.error(`[Bot] Failed to leave banned guild ${guild.id}:`, leaveErr);
+    }
+    return;
+  }
+
   try {
     const redis = (await import("@/db/init")).redis;
 
