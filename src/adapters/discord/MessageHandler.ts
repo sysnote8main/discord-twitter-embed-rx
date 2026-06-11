@@ -16,6 +16,7 @@ import {
 
 import { ITwitterAdapter } from "@/adapters/twitter/BaseTwitterAdapter";
 import { Tweet } from "@/core/models/Tweet";
+import { BanService } from "@/core/services/BanService";
 import { ChannelConfigService } from "@/core/services/ChannelConfigService";
 import { MediaHandler } from "@/core/services/MediaHandler";
 import { TweetProcessor } from "@/core/services/TweetProcessor";
@@ -53,7 +54,8 @@ export class MessageHandler {
     private readonly videoDownloader: IVideoDownloader,
     private readonly replyLogger: IReplyLogger,
     private readonly tmpDirBase: string,
-    private readonly channelConfigService?: ChannelConfigService
+    private readonly channelConfigService?: ChannelConfigService,
+    private readonly banService?: BanService
   ) {}
 
   /**
@@ -67,6 +69,15 @@ export class MessageHandler {
     // ボットメッセージや自身のメッセージは無視
     if (this.shouldIgnore(client, message)) {
       return;
+    }
+
+    // P0: ユーザー BAN チェック
+    if (this.banService) {
+      const isBanned = await this.banService.isUserBanned(message.author.id);
+      if (isBanned) {
+        logger.debug(`[MessageHandler] User ${message.author.id} is banned, ignoring message`);
+        return;
+      }
     }
 
     // P0: チャンネル許可チェック
