@@ -44,6 +44,7 @@ jobs:
           node-version: 24.x
 
       - name: Restore node_modules
+        id: restore
         uses: actions/cache/restore@v5
         with:
           path: |
@@ -51,6 +52,10 @@ jobs:
             packages/*/node_modules
             packages/shared/dist
           key: deps-${{ github.run_id }}
+
+      - name: Install dependencies (fallback)
+        if: steps.restore.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline
 
       - name: Run oxlint
         run: npx oxlint src/
@@ -80,6 +85,7 @@ jobs:
           node-version: 24.x
 
       - name: Restore node_modules
+        id: restore
         uses: actions/cache/restore@v5
         with:
           path: |
@@ -87,6 +93,10 @@ jobs:
             packages/*/node_modules
             packages/shared/dist
           key: deps-${{ github.run_id }}
+
+      - name: Install dependencies (fallback)
+        if: steps.restore.outputs.cache-hit != 'true'
+        run: npm ci --prefer-offline
 
       - name: Build TypeScript
         run: npm run build
