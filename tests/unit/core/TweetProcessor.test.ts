@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { TEST_URLS, TEST_MESSAGES } from "../../fixtures/test-urls";
 import { TweetProcessor } from "@/core/services/TweetProcessor";
+import { mediaUrl } from "../../fixtures/testMediaUrl";
 
 describe("TweetProcessor", () => {
   const processor = new TweetProcessor();
@@ -95,7 +96,7 @@ describe("TweetProcessor", () => {
         author: { id: "test", name: "Test", url: "https://x.com/test", iconUrl: "" },
         text: "test",
         metrics: { replies: 0, likes: 0, retweets: 0 },
-        media: [{ url: "https://example.com/video.mp4", thumbnailUrl: "", type: "video" as const }],
+        media: [{ url: mediaUrl("video.mp4"), thumbnailUrl: "", type: "video" as const }],
         timestamp: new Date(),
       };
 
@@ -160,9 +161,9 @@ describe("TweetProcessor", () => {
         text: "test",
         metrics: { replies: 0, likes: 0, retweets: 0 },
         media: [
-          { url: "https://example.com/photo.jpg", thumbnailUrl: "", type: "photo" as const },
-          { url: "https://example.com/video.mp4", thumbnailUrl: "", type: "video" as const },
-          { url: "https://example.com/video2.mp4", thumbnailUrl: "", type: "video" as const },
+          { url: mediaUrl("photo.jpg"), thumbnailUrl: "", type: "photo" as const },
+          { url: mediaUrl("video.mp4"), thumbnailUrl: "", type: "video" as const },
+          { url: mediaUrl("video2.mp4"), thumbnailUrl: "", type: "video" as const },
         ],
         timestamp: new Date(),
       };
@@ -170,8 +171,8 @@ describe("TweetProcessor", () => {
       const videoUrls = processor.getVideoUrls(tweet);
 
       expect(videoUrls).toHaveLength(2);
-      expect(videoUrls).toContain("https://example.com/video.mp4");
-      expect(videoUrls).toContain("https://example.com/video2.mp4");
+      expect(videoUrls).toContain(mediaUrl("video.mp4"));
+      expect(videoUrls).toContain(mediaUrl("video2.mp4"));
     });
 
     it("動画がない場合は空配列を返す", () => {
@@ -180,7 +181,7 @@ describe("TweetProcessor", () => {
         author: { id: "test", name: "Test", url: "https://x.com/test", iconUrl: "" },
         text: "test",
         metrics: { replies: 0, likes: 0, retweets: 0 },
-        media: [{ url: "https://example.com/photo.jpg", thumbnailUrl: "", type: "photo" as const }],
+        media: [{ url: mediaUrl("photo.jpg"), thumbnailUrl: "", type: "photo" as const }],
         timestamp: new Date(),
       };
 

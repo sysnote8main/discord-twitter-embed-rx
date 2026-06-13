@@ -32,7 +32,7 @@ describe("HttpClient統合テスト", () => {
     });
 
     it("不正なプロトコルの場合はエラーを投げる", async () => {
-      const url = "ftp://example.com/file.mp4";
+      const url = "ftp://files.example.test/file.mp4";
 
       await expect(httpClient.getFileSize(url)).rejects.toThrow();
     }, 15000);

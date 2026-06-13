@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { mediaUrl } from "../../../fixtures/testMediaUrl";
 import {
   createMockTweet,
   MOCK_TWEET_WITH_QUOTE,
@@ -73,15 +74,15 @@ describe("DiscordEmbedBuilder", () => {
     it("メディアがある場合は各メディアごとにEmbedを生成する", () => {
       const tweet = createMockTweet({
         media: [
-          { url: "https://example.com/photo1.jpg", thumbnailUrl: "https://example.com/photo1.jpg", type: "photo" },
-          { url: "https://example.com/photo2.jpg", thumbnailUrl: "https://example.com/photo2.jpg", type: "photo" },
+          { url: mediaUrl("photo1.jpg"), thumbnailUrl: mediaUrl("photo1.jpg"), type: "photo" },
+          { url: mediaUrl("photo2.jpg"), thumbnailUrl: mediaUrl("photo2.jpg"), type: "photo" },
         ],
       });
       const embeds = builder.build(tweet);
 
       expect(embeds).toHaveLength(2);
-      expect(embeds[0].toJSON().image?.url).toBe("https://example.com/photo1.jpg");
-      expect(embeds[1].toJSON().image?.url).toBe("https://example.com/photo2.jpg");
+      expect(embeds[0].toJSON().image?.url).toBe(mediaUrl("photo1.jpg"));
+      expect(embeds[1].toJSON().image?.url).toBe(mediaUrl("photo2.jpg"));
     });
 
     it("画像の場合はサムネイルURLが設定される", () => {
