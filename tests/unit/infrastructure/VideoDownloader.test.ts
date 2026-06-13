@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mediaUrl } from "../../fixtures/testMediaUrl";
 
 vi.mock("node:fs", () => ({
   createWriteStream: vi.fn(),
@@ -42,7 +43,7 @@ describe("VideoDownloader", () => {
   });
 
   describe("download", () => {
-    it("HTTPS URL をダウンロードできる", async () => {
+    it("URL をダウンロードできる", async () => {
       const mockWriteStream = createMockWriteStream();
       vi.mocked(createWriteStream).mockReturnValue(mockWriteStream);
 
@@ -52,7 +53,7 @@ describe("VideoDownloader", () => {
       });
 
       const mockRequest = new EventEmitter();
-      vi.mocked(httpsModule.get as any).mockImplementation(
+      vi.mocked(httpModule.get as any).mockImplementation(
         (_url: any, callback: any) => {
           // eslint-disable-line @typescript-eslint/no-explicit-any
           callback(mockResponse);
@@ -61,7 +62,7 @@ describe("VideoDownloader", () => {
       );
 
       await expect(
-        downloader.download("https://example.com/video.mp4", "/tmp/test.mp4"),
+        downloader.download(mediaUrl("video.mp4"), "/tmp/test.mp4"),
       ).resolves.toBeUndefined();
 
       expect(createWriteStream).toHaveBeenCalledWith("/tmp/test.mp4");
@@ -88,7 +89,7 @@ describe("VideoDownloader", () => {
       );
 
       await expect(
-        downloader.download("http://example.com/video.mp4", "/tmp/test.mp4"),
+        downloader.download(mediaUrl("video.mp4"), "/tmp/test.mp4"),
       ).resolves.toBeUndefined();
 
       expect(httpModule.get).toHaveBeenCalled();
@@ -99,7 +100,7 @@ describe("VideoDownloader", () => {
       const mockResponse = createMockResponse(404);
       const mockRequest = new EventEmitter();
 
-      vi.mocked(httpsModule.get as any).mockImplementation(
+      vi.mocked(httpModule.get as any).mockImplementation(
         (_url: any, callback: any) => {
           // eslint-disable-line @typescript-eslint/no-explicit-any
           callback(mockResponse);
@@ -108,7 +109,7 @@ describe("VideoDownloader", () => {
       );
 
       await expect(
-        downloader.download("https://example.com/video.mp4", "/tmp/test.mp4"),
+        downloader.download(mediaUrl("video.mp4"), "/tmp/test.mp4"),
       ).rejects.toThrow("Failed to download file: 404");
 
       expect(mockResponse.resume).toHaveBeenCalled();
@@ -116,10 +117,10 @@ describe("VideoDownloader", () => {
 
     it("リクエストエラーが発生した場合 reject する", async () => {
       const mockRequest = new EventEmitter();
-      vi.mocked(httpsModule.get as any).mockImplementation(() => mockRequest); // eslint-disable-line @typescript-eslint/no-explicit-any
+      vi.mocked(httpModule.get as any).mockImplementation(() => mockRequest); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const downloadPromise = downloader.download(
-        "https://example.com/video.mp4",
+        mediaUrl("video.mp4"),
         "/tmp/test.mp4",
       );
       mockRequest.emit("error", new Error("connection refused"));
@@ -139,7 +140,7 @@ describe("VideoDownloader", () => {
       });
 
       const mockRequest = new EventEmitter();
-      vi.mocked(httpsModule.get as any).mockImplementation(
+      vi.mocked(httpModule.get as any).mockImplementation(
         (_url: any, callback: any) => {
           // eslint-disable-line @typescript-eslint/no-explicit-any
           callback(mockResponse);
@@ -148,7 +149,7 @@ describe("VideoDownloader", () => {
       );
 
       await expect(
-        downloader.download("https://example.com/video.mp4", "/tmp/test.mp4"),
+        downloader.download(mediaUrl("video.mp4"), "/tmp/test.mp4"),
       ).rejects.toThrow("disk full");
 
       expect((mockWriteStream as any).close).toHaveBeenCalled(); // eslint-disable-line @typescript-eslint/no-explicit-any

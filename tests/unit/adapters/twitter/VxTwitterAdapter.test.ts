@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mediaUrl } from "../../../fixtures/testMediaUrl";
 
 import type { VxTwitterApi } from "@/vxtwitter/api";
 import { VxTwitterServerError } from "@/vxtwitter/api";
@@ -29,7 +30,7 @@ const createVxTwitterData = (
   tweetID: "123456789",
   tweetURL: "https://x.com/test_user/status/123456789",
   user_name: "Test User",
-  user_profile_image_url: "https://example.com/icon.jpg",
+  user_profile_image_url: mediaUrl("icon.jpg"),
   user_screen_name: "test_user",
   ...overrides,
 });
@@ -84,14 +85,14 @@ describe("VxTwitterAdapter", () => {
 
     it("画像メディアを含むツイートを変換できる", async () => {
       const vxData = createVxTwitterData({
-        mediaURLs: ["https://example.com/photo.jpg"],
+        mediaURLs: [mediaUrl("photo.jpg")],
         media_extended: [
           {
             altText: null,
             size: [],
-            thumbnail_url: "https://example.com/photo.jpg",
+            thumbnail_url: mediaUrl("photo.jpg"),
             type: "photo",
-            url: "https://example.com/photo.jpg",
+            url: mediaUrl("photo.jpg"),
           },
         ],
       });
@@ -101,19 +102,19 @@ describe("VxTwitterAdapter", () => {
 
       expect(result?.media).toHaveLength(1);
       expect(result?.media[0].type).toBe("photo");
-      expect(result?.media[0].url).toBe("https://example.com/photo.jpg");
+      expect(result?.media[0].url).toBe(mediaUrl("photo.jpg"));
     });
 
     it("動画メディアを含むツイートを変換できる", async () => {
       const vxData = createVxTwitterData({
-        mediaURLs: ["https://example.com/video.mp4"],
+        mediaURLs: [mediaUrl("video.mp4")],
         media_extended: [
           {
             altText: null,
             size: [],
-            thumbnail_url: "https://example.com/thumb.jpg",
+            thumbnail_url: mediaUrl("thumb.jpg"),
             type: "video",
-            url: "https://example.com/video.mp4",
+            url: mediaUrl("video.mp4"),
           },
         ],
       });
@@ -124,7 +125,7 @@ describe("VxTwitterAdapter", () => {
       expect(result?.media).toHaveLength(1);
       expect(result?.media[0].type).toBe("video");
       expect(result?.media[0].thumbnailUrl).toBe(
-        "https://example.com/thumb.jpg",
+        mediaUrl("thumb.jpg"),
       );
     });
 

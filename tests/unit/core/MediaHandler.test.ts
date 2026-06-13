@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { TweetMedia } from "@/core/models/Tweet";
 import { MediaHandler, IFileSizeChecker } from "@/core/services/MediaHandler";
+import { mediaUrl } from "../../fixtures/testMediaUrl";
 
 describe("MediaHandler", () => {
   let mockFileSizeChecker: IFileSizeChecker;
@@ -17,8 +18,8 @@ describe("MediaHandler", () => {
   describe("filterBySize", () => {
     it("ファイルサイズが上限以下のメディアをdownloadableに分類する", async () => {
       const media: TweetMedia[] = [
-        { url: "https://example.com/small.mp4", thumbnailUrl: "", type: "video" },
-        { url: "https://example.com/tiny.mp4", thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("small.mp4"), thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("tiny.mp4"), thumbnailUrl: "", type: "video" },
       ];
 
       vi.mocked(mockFileSizeChecker.getFileSize)
@@ -34,8 +35,8 @@ describe("MediaHandler", () => {
 
     it("ファイルサイズが上限を超えるメディアをtooLargeに分類する", async () => {
       const media: TweetMedia[] = [
-        { url: "https://example.com/large.mp4", thumbnailUrl: "", type: "video" },
-        { url: "https://example.com/huge.mp4", thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("large.mp4"), thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("huge.mp4"), thumbnailUrl: "", type: "video" },
       ];
 
       vi.mocked(mockFileSizeChecker.getFileSize)
@@ -51,9 +52,9 @@ describe("MediaHandler", () => {
 
     it("上限以下と上限超過が混在する場合、正しく分類する", async () => {
       const media: TweetMedia[] = [
-        { url: "https://example.com/small.mp4", thumbnailUrl: "", type: "video" },
-        { url: "https://example.com/large.mp4", thumbnailUrl: "", type: "video" },
-        { url: "https://example.com/medium.mp4", thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("small.mp4"), thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("large.mp4"), thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("medium.mp4"), thumbnailUrl: "", type: "video" },
       ];
 
       vi.mocked(mockFileSizeChecker.getFileSize)
@@ -65,13 +66,13 @@ describe("MediaHandler", () => {
 
       expect(result.downloadable).toHaveLength(2);
       expect(result.tooLarge).toHaveLength(1);
-      expect(result.downloadable[0].url).toBe("https://example.com/small.mp4");
-      expect(result.downloadable[1].url).toBe("https://example.com/medium.mp4");
-      expect(result.tooLarge[0].url).toBe("https://example.com/large.mp4");
+      expect(result.downloadable[0].url).toBe(mediaUrl("small.mp4"));
+      expect(result.downloadable[1].url).toBe(mediaUrl("medium.mp4"));
+      expect(result.tooLarge[0].url).toBe(mediaUrl("large.mp4"));
     });
 
     it("ファイルサイズ取得エラー時はtooLargeに分類する", async () => {
-      const media: TweetMedia[] = [{ url: "https://example.com/error.mp4", thumbnailUrl: "", type: "video" }];
+      const media: TweetMedia[] = [{ url: mediaUrl("error.mp4"), thumbnailUrl: "", type: "video" }];
 
       vi.mocked(mockFileSizeChecker.getFileSize).mockRejectedValueOnce(new Error("Network error"));
 
@@ -92,7 +93,7 @@ describe("MediaHandler", () => {
   describe("isVideo", () => {
     it("動画メディアに対してtrueを返す", () => {
       const media: TweetMedia = {
-        url: "https://example.com/video.mp4",
+        url: mediaUrl("video.mp4"),
         thumbnailUrl: "",
         type: "video",
       };
@@ -102,7 +103,7 @@ describe("MediaHandler", () => {
 
     it("画像メディアに対してfalseを返す", () => {
       const media: TweetMedia = {
-        url: "https://example.com/photo.jpg",
+        url: mediaUrl("photo.jpg"),
         thumbnailUrl: "",
         type: "photo",
       };
@@ -114,21 +115,21 @@ describe("MediaHandler", () => {
   describe("filterVideos", () => {
     it("動画メディアのみをフィルタリングする", () => {
       const media: TweetMedia[] = [
-        { url: "https://example.com/photo.jpg", thumbnailUrl: "", type: "photo" },
-        { url: "https://example.com/video.mp4", thumbnailUrl: "", type: "video" },
-        { url: "https://example.com/photo2.jpg", thumbnailUrl: "", type: "photo" },
-        { url: "https://example.com/video2.mp4", thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("photo.jpg"), thumbnailUrl: "", type: "photo" },
+        { url: mediaUrl("video.mp4"), thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("photo2.jpg"), thumbnailUrl: "", type: "photo" },
+        { url: mediaUrl("video2.mp4"), thumbnailUrl: "", type: "video" },
       ];
 
       const videos = mediaHandler.filterVideos(media);
 
       expect(videos).toHaveLength(2);
-      expect(videos[0].url).toBe("https://example.com/video.mp4");
-      expect(videos[1].url).toBe("https://example.com/video2.mp4");
+      expect(videos[0].url).toBe(mediaUrl("video.mp4"));
+      expect(videos[1].url).toBe(mediaUrl("video2.mp4"));
     });
 
     it("動画がない場合は空配列を返す", () => {
-      const media: TweetMedia[] = [{ url: "https://example.com/photo.jpg", thumbnailUrl: "", type: "photo" }];
+      const media: TweetMedia[] = [{ url: mediaUrl("photo.jpg"), thumbnailUrl: "", type: "photo" }];
 
       const videos = mediaHandler.filterVideos(media);
 
@@ -139,20 +140,20 @@ describe("MediaHandler", () => {
   describe("filterPhotos", () => {
     it("画像メディアのみをフィルタリングする", () => {
       const media: TweetMedia[] = [
-        { url: "https://example.com/photo.jpg", thumbnailUrl: "", type: "photo" },
-        { url: "https://example.com/video.mp4", thumbnailUrl: "", type: "video" },
-        { url: "https://example.com/photo2.jpg", thumbnailUrl: "", type: "photo" },
+        { url: mediaUrl("photo.jpg"), thumbnailUrl: "", type: "photo" },
+        { url: mediaUrl("video.mp4"), thumbnailUrl: "", type: "video" },
+        { url: mediaUrl("photo2.jpg"), thumbnailUrl: "", type: "photo" },
       ];
 
       const photos = mediaHandler.filterPhotos(media);
 
       expect(photos).toHaveLength(2);
-      expect(photos[0].url).toBe("https://example.com/photo.jpg");
-      expect(photos[1].url).toBe("https://example.com/photo2.jpg");
+      expect(photos[0].url).toBe(mediaUrl("photo.jpg"));
+      expect(photos[1].url).toBe(mediaUrl("photo2.jpg"));
     });
 
     it("画像がない場合は空配列を返す", () => {
-      const media: TweetMedia[] = [{ url: "https://example.com/video.mp4", thumbnailUrl: "", type: "video" }];
+      const media: TweetMedia[] = [{ url: mediaUrl("video.mp4"), thumbnailUrl: "", type: "video" }];
 
       const photos = mediaHandler.filterPhotos(media);
 

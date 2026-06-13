@@ -1,10 +1,11 @@
 import { Tweet, TweetAuthor, TweetMetrics, TweetMedia } from "@/core/models/Tweet";
+import { mediaUrl } from "./testMediaUrl";
 
 export const createMockTweetAuthor = (overrides?: Partial<TweetAuthor>): TweetAuthor => ({
   id: "test_user",
   name: "Test User(@test_user)",
   url: "https://x.com/test_user",
-  iconUrl: "https://example.com/icon.jpg",
+  iconUrl: mediaUrl("icon.jpg"),
   ...overrides,
 });
 
@@ -16,8 +17,8 @@ export const createMockTweetMetrics = (overrides?: Partial<TweetMetrics>): Tweet
 });
 
 export const createMockTweetMedia = (overrides?: Partial<TweetMedia>): TweetMedia => ({
-  url: "https://example.com/video.mp4",
-  thumbnailUrl: "https://example.com/thumb.jpg",
+  url: mediaUrl("video.mp4"),
+  thumbnailUrl: mediaUrl("thumb.jpg"),
   type: "video",
   ...overrides,
 });
@@ -36,8 +37,8 @@ export const createMockTweet = (overrides?: Partial<Tweet>): Tweet => ({
 export const MOCK_TWEET_WITH_VIDEO: Tweet = createMockTweet({
   media: [
     createMockTweetMedia({
-      url: "https://example.com/video.mp4",
-      thumbnailUrl: "https://example.com/thumb.jpg",
+      url: mediaUrl("video.mp4"),
+      thumbnailUrl: mediaUrl("thumb.jpg"),
       type: "video",
     }),
   ],
@@ -47,8 +48,8 @@ export const MOCK_TWEET_WITH_VIDEO: Tweet = createMockTweet({
 export const MOCK_TWEET_WITH_PHOTO: Tweet = createMockTweet({
   media: [
     createMockTweetMedia({
-      url: "https://example.com/photo.jpg",
-      thumbnailUrl: "https://example.com/photo.jpg",
+      url: mediaUrl("photo.jpg"),
+      thumbnailUrl: mediaUrl("photo.jpg"),
       type: "photo",
     }),
   ],
@@ -69,9 +70,9 @@ export const MOCK_TWEET_WITH_QUOTE: Tweet = createMockTweet({
 // 複数メディア付きツイート
 export const MOCK_TWEET_WITH_MULTIPLE_MEDIA: Tweet = createMockTweet({
   media: [
-    createMockTweetMedia({ type: "photo", url: "https://example.com/photo1.jpg" }),
-    createMockTweetMedia({ type: "photo", url: "https://example.com/photo2.jpg" }),
-    createMockTweetMedia({ type: "video", url: "https://example.com/video.mp4" }),
+    createMockTweetMedia({ type: "photo", url: mediaUrl("photo1.jpg") }),
+    createMockTweetMedia({ type: "photo", url: mediaUrl("photo2.jpg") }),
+    createMockTweetMedia({ type: "video", url: mediaUrl("video.mp4") }),
   ],
 });
 

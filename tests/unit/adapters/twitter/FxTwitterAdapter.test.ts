@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mediaUrl } from "../../../fixtures/testMediaUrl";
 
 import type { FxTwitterApi } from "@/fxtwitter/api";
 import type {
@@ -18,9 +19,9 @@ const createFxAuthor = (overrides: Partial<Author> = {}): Author => ({
   id: "test_user",
   name: "Test User",
   screen_name: "test_user",
-  avatar_url: "https://example.com/icon.jpg",
+  avatar_url: mediaUrl("icon.jpg"),
   avatar_color: "#000000",
-  banner_url: "https://example.com/banner.jpg",
+  banner_url: mediaUrl("banner.jpg"),
   ...overrides,
 });
 
@@ -49,8 +50,8 @@ const createFxTweet = (overrides: Partial<FxTweet> = {}): FxTweet => ({
 
 const createFxPhoto = (overrides: Partial<Photo> = {}): Photo => ({
   type: "photo",
-  thumbnail_url: "https://example.com/photo_thumb.jpg",
-  url: "https://example.com/photo.jpg",
+  thumbnail_url: mediaUrl("photo_thumb.jpg"),
+  url: mediaUrl("photo.jpg"),
   width: 1920,
   height: 1080,
   altText: "",
@@ -127,17 +128,17 @@ describe("FxTwitterAdapter", () => {
 
       expect(result?.media).toHaveLength(1);
       expect(result?.media[0].type).toBe("photo");
-      expect(result?.media[0].url).toBe("https://example.com/photo.jpg");
+      expect(result?.media[0].url).toBe(mediaUrl("photo.jpg"));
       expect(result?.media[0].thumbnailUrl).toBe(
-        "https://example.com/photo_thumb.jpg",
+        mediaUrl("photo_thumb.jpg"),
       );
     });
 
     it("複数の画像メディアを変換できる", async () => {
       const tweet = createFxTweet({
         media: createFxMedia([
-          createFxPhoto({ url: "https://example.com/photo1.jpg" }),
-          createFxPhoto({ url: "https://example.com/photo2.jpg" }),
+          createFxPhoto({ url: mediaUrl("photo1.jpg") }),
+          createFxPhoto({ url: mediaUrl("photo2.jpg") }),
         ]),
       });
       mockApi.getPostInformation.mockResolvedValue(createFxResponse(tweet));
